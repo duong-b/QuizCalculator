@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Math 121 Quiz Grade Calculator</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px; }
+    h1 { margin: 0 0 12px; }
+    .row { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: center; margin: 10px 0; }
+    input { padding: 8px; font-size: 16px; width: 100%; }
+    button { padding: 10px 14px; font-size: 16px; cursor: pointer; }
+    .out { margin-top: 16px; padding: 12px; border: 1px solid #ccc; border-radius: 10px; }
+    .small { color: #444; font-size: 14px; }
+    code { background: #f6f6f6; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Math 121 Quiz Grade Calculator</h1>
+  <p class="small">
+    Rule: If <code>M ≥ 11</code> and <code>U = 0</code>, use the table. Otherwise use
+    <code>(#M)*4 + (#S)*2.5 + (#R)*1</code>. :contentReference[oaicite:5]{index=5} :contentReference[oaicite:6]{index=6}
+  </p>
+
+  <div class="row"><label for="m"># Mastered (M)</label><input id="m" type="number" min="0" max="20" value="0"></div>
+  <div class="row"><label for="s"># Satisfactory (S)</label><input id="s" type="number" min="0" max="20" value="0"></div>
+  <div class="row"><label for="r"># Needs Review (R)</label><input id="r" type="number" min="0" max="20" value="0"></div>
+  <div class="row"><label for="u"># Un-mastered (U)</label><input id="u" type="number" min="0" max="20" value="0"></div>
+
+  <button id="calc">Calculate</button>
+
+  <div class="out" id="out">
+    Enter counts and click Calculate.
+  </div>
+
+<script>
+  // Table: rows are M=11..20, columns are S=0..9 (blank = impossible combo for 20 standards)
+  // Values taken from your rubric table. :contentReference[oaicite:7]{index=7}
+  const gradeTable = {
+    20: {0:100},
+    19: {0:96, 1:98},
+    18: {0:93, 1:94, 2:95},
+    17: {0:89, 1:90, 2:91, 3:92},
+    16: {0:86, 1:87, 2:88, 3:89, 4:90},
+    15: {0:82, 1:83, 2:84, 3:85, 4:86, 5:87},
+    14: {0:78, 1:80, 2:81, 3:82, 4:83, 5:84, 6:85},
+    13: {0:75, 1:76, 2:77, 3:78, 4:79, 5:80, 6:81, 7:82},
+    12: {0:72, 1:73, 2:74, 3:75, 4:76, 5:77, 6:78, 7:79, 8:80},
+    11: {0:68, 1:69, 2:70, 3:71, 4:72, 5:73, 6:74, 7:75, 8:76, 9:77}
+  };
+
+  const TOTAL_STANDARDS = 20;
+
+  function num(id){ return Number(document.getElementById(id).value || 0); }
+
+  document.getElementById('calc').addEventListener('click', () => {
+    const m = num('m'), s = num('s'), r = num('r'), u = num('u');
+    const total = m + s + r + u;
+
+    const out = document.getElementById('out');
+
+    if ([m,s,r,u].some(x => x < 0)) {
+      out.textContent = "Counts can’t be negative.";
+      return;
+    }
+    if (total !== TOTAL_STANDARDS) {
+      out.textContent = `Counts must total ${TOTAL_STANDARDS}. You entered ${total}.`;
+      return;
+    }
+
+    let grade;
+    let method;
+
+    if (m >= 11 && u === 0) {
+      // table lookup
+      const row = gradeTable[m];
+      if (!row || row[s] === undefined) {
+        out.textContent = "That (M,S) combo isn’t in the table (or isn’t possible). Double-check counts.";
+        return;
+      }
+      grade = row[s];
+      method = "Used table (M ≥ 11 and U = 0).";
+    } else {
+      grade = m*4 + s*2.5 + r*1;
+      method = "Used formula (M ≤ 10 or any U).";
+    }
+
+    out.innerHTML = `
+      <div><strong>Quiz Category Grade:</strong> ${grade.toFixed(1)}%</div>
+      <div class="small">${method}</div>
+    `;
+  });
+</script>
+</body>
+</html>
